@@ -55,6 +55,24 @@ class RegisterView(generics.GenericAPIView):
             }
         }, status=status.HTTP_201_CREATED)
 
+class SaveFileView(generics.CreateAPIView):
+    serializer_class = SavedFileSerializer
+    permission_classes = [IsAuthenticated] # User must be logged in
+
+    def perform_create(self, serializer):
+        # Automatically set the 'user' field to the currently logged-in user
+        serializer.save(user=self.request.user)
+
+# Endpoint 2: Receive Data (GET)
+class UserFilesListView(generics.ListAPIView):
+    serializer_class = SavedFileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Return only the files belonging to the requesting user
+        # .order_by('-timestamp') shows newest files first
+        return SavedFile.objects.filter(user=self.request.user).order_by('-timestamp')
+
 class UserProfileView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer

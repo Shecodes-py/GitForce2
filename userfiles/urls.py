@@ -22,5 +22,9 @@ urlpatterns = [
     # Auth Endpoints
     path('api/auth/', include('dj_rest_auth.urls')),                # Login, Logout, Password Reset
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')), # Register
+
+    path('api/save-file/', SaveFileView.as_view(), name='save-file'),
+    path('api/my-files/', UserFilesListView.as_view(), name='my-files'),
 ]
+
 

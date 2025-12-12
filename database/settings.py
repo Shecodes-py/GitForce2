@@ -153,7 +153,7 @@ STATIC_URL = 'static/'
 
 CORS_ALLOWED_ORIGINS = [
     "https://agrotech-three.vercel.app",
-    "http://localhost:3000",
+    "http://localhost:5173",
 ]
 
 REST_FRAMEWORK = {
