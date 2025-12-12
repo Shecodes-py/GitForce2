@@ -25,6 +25,8 @@ urlpatterns = [
 
     path('api/save-file/', SaveFileView.as_view(), name='save-file'),
     path('api/my-files/', UserFilesListView.as_view(), name='my-files'),
+
+    path('api/auth/firebase-sync/', FirebaseSyncView.as_view(), name='firebase_sync'),
 ]
 
 

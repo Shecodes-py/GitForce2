@@ -56,11 +56,12 @@ class RegisterView(generics.GenericAPIView):
         }, status=status.HTTP_201_CREATED)
 
 class SaveFileView(generics.CreateAPIView):
+    queryset = SavedFile.objects.all()
     serializer_class = SavedFileSerializer
     permission_classes = [AllowAny] # User must be logged in
 
     def perform_create(self, serializer):
-        # Automatically set the 'user' field to the currently logged-in user
+        
         serializer.save(user=self.request.user)
 
 # Endpoint 2: Receive Data (GET)
@@ -139,3 +140,47 @@ class WhatsAppBotView(APIView):
         # 5. Return XML (Critical for Twilio)
         # We use standard HttpResponse because DRF's Response() returns JSON
         return HttpResponse(str(resp), content_type='text/xml')
+    
+
+class FirebaseSyncView(generics.GenericAPIView):
+    permission_classes = [AllowAny] # Public, because the user isn't in Django yet
+    serializer_class = FirebaseUserSerializer
+
+    def post(self, request):
+        email = request.data.get('email')
+        
+        # 1. Validate that email was sent
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Check if user already exists
+        # We use get_or_create. 
+        # 'created' is a boolean (True if new user, False if existed)
+        user, created = CustomUser.objects.get_or_create(
+            email=email,
+            defaults={
+                'username': email, # Use email as username since we don't have one
+                'full_name': request.data.get('full_name', ''),
+                'farm_location': request.data.get('farm_location', '')
+            }
+        )
+
+        # 3. If it was a new user, we need to set an unusable password 
+        # (Since they login via Firebase, they don't need a Django password)
+        if created:
+            user.set_unusable_password()
+            user.save()
+        
+        # 4. Generate Django Tokens (So they can make authorized calls later)
+        tokens = user.tokens()
+
+        return Response({
+            "message": "User synced successfully",
+            "created": created, # Tells frontend if this was a new registration
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name
+            },
+            "tokens": tokens # <--- FRONTEND NEEDS THIS TO SAVE FILES
+        }, status=status.HTTP_200_OK)

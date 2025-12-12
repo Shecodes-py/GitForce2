@@ -52,4 +52,10 @@ class SavedFileSerializer(serializers.ModelSerializer):
         # We include 'user' in fields so we can see it in responses,
         # but read_only=True ensures we don't need to send it in POST requests.
         fields = ['id', 'user', 'confidence', 'crop_name', 'top_class', 'file_data', 'timestamp']
-        read_only_fields = ['user', 'timestamp']
+        read_only_fields = [ 'timestamp']
+
+
+class FirebaseUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['email', 'full_name', 'farm_location']
