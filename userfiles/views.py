@@ -14,7 +14,18 @@ from twilio.twiml.messaging_response import MessagingResponse
 
 from rest_framework.permissions import IsAuthenticated
 
-# genai.configure(api_key=settings.GOOGLE_API_KEY)
+import os
+import requests
+import google.generativeai as genai
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+google_api_key = os.getenv("google_api_key")
+if not google_api_key:
+    raise RuntimeError("Missing required environment variable: 'google_api_key'")
+genai.configure(api_key=google_api_key)
 
 # Create your views here.
 def index(request):
@@ -91,56 +102,66 @@ class CreateFarmerView(generics.CreateAPIView):
         serializer.save()
 
 class WhatsAppBotView(APIView):
-    # Twilio sends data as form-encoded, so we need these parsers
     parser_classes = [FormParser, MultiPartParser]
-    permission_classes = [AllowAny] # Allow Twilio to hit this endpoint without a token
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        # 1. Get the data from the request
         incoming_msg = request.data.get('Body', '').strip()
-        num_media = request.data.get('NumMedia', '0') # Comes as a string
+        num_media = request.data.get('NumMedia', '0')
         sender_number = request.data.get('From')
         
-        # 2. Initialize Twilio Response Object
         resp = MessagingResponse()
         msg = resp.message()
 
-        print(f"📩 Message received from {sender_number}")
+        print(f"📩 Message from {sender_number}")
 
-        # 3. Logic: Check if they sent an image
         if int(num_media) > 0:
             image_url = request.data.get('MediaUrl0')
-            
-            # --- MOCK AI ANALYSIS START ---
-            # In a real scenario, you'd pass 'image_url' to your ML model function here
-            print(f"🖼 Analyzing Image: {image_url}")
-            
-            grade = "Grade A"
-            price = "₦12,000"
-            token_value = "50 AGRI"
-            # --- MOCK AI ANALYSIS END ---
+            print(f"🖼 Image URL: {image_url}")
 
-            # 4. Construct the Reply
-            reply_text = (
-                f"🍅 *AgriTrust Analysis*\n"
-                f"----------------\n"
-                f"✅ *Quality:* {grade}\n"
-                f"💰 *Est. Price:* {price}\n"
-                f"----------------\n"
-                f"Tap below to mint & sell on Blockchain: 👇\n"
-                f"https://your-webapp.com/mint?grade=A&price=12000"
-            )
-            msg.body(reply_text)
-            
+            try:
+                # 1. Download the image from Twilio
+                # Twilio URLs sometimes require auth, but usually public in sandbox.
+                # If it fails, we might need basic auth (Account SID + Token)
+                img_data = requests.get(image_url).content
+
+                # 2. Setup Gemini Model (Use Flash for speed!)
+                model = genai.GenerativeModel('gemini-1.5-flash')
+
+                # 3. The Prompt (Be specific!)
+                prompt = (
+                    "Analyze this crop image. "
+                    "1. Identify the crop. "
+                    "2. Grade its quality (Grade A, B, or C). "
+                    "3. Estimate a fair market price in Nigerian Naira (NGN) per kg. "
+                    "4. Keep it very short and concise for a WhatsApp message."
+                    "5. If it isn't a crop, ask for a crop photo."
+                )
+
+                # 4. Generate Content
+                # We pass the prompt AND the image data
+                response = model.generate_content([
+                    prompt,
+                    {"mime_type": "image/jpeg", "data": img_data}
+                ])
+
+                ai_analysis = response.text
+                print(f"🧠 Gemini Says: {ai_analysis}")
+
+                # 5. Send the Analysis back to WhatsApp
+                msg.body(
+                    f"🤖 *Gemini Analysis:*\n{ai_analysis}\n\n"
+                    f"👇 *Sell this crop:* \n"
+                    f"https://your-webapp.com/mint"
+                )
+
+            except Exception as e:
+                print(f"❌ Error: {e}")
+                msg.body("Sorry, I couldn't analyze that image. Please try again.")
+
         else:
-            # Welcome Message (Text only)
-            msg.body(
-                "👋 Welcome to *AgriTrust Nigeria*!\n\n"
-                "Please send a photo 📸 of your crop to get an instant AI valuation."
-            )
+            msg.body("📸 Send me a photo of your harvest to analyze!")
 
-        # 5. Return XML (Critical for Twilio)
-        # We use standard HttpResponse because DRF's Response() returns JSON
         return HttpResponse(str(resp), content_type='text/xml')
 
 # 1. LIST (Get All) and CREATE (Post New)
