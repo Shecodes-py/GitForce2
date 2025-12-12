@@ -12,10 +12,14 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from twilio.twiml.messaging_response import MessagingResponse
 # Create your views here.
+def index(request):
+    return HttpResponse("Hello, world. You're at the userfiles index.")
 
 class UserProfileView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer  
+
+    
 
 class WhatsAppBotView(APIView):
     # Twilio sends data as form-encoded, so we need these parsers
