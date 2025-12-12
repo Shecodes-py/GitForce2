@@ -1,7 +1,6 @@
 from django.urls import path, include
 from .views import UserProfileView
-from .views import WhatsAppBotView, index, CreateFarmerView, UserProfileView
-
+from .views import *
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import (
@@ -17,4 +16,11 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('whatsapp/', WhatsAppBotView.as_view(), name='whatsapp-bot'),
     path('farmer/onboard/', CreateFarmerView.as_view(), name='farmer-onboard'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('register/', RegisterView.as_view(), name='register'),
+
+    # Auth Endpoints
+    path('api/auth/', include('dj_rest_auth.urls')),                # Login, Logout, Password Reset
+    path('api/auth/registration/', include('dj_rest_auth.registration.urls')), # Register
 ]
+

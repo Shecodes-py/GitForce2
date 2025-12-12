@@ -1,9 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # Create your models here.
 class CustomUser(AbstractUser):
-    uid = models.CharField(max_length=255, unique=True)
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=30)
@@ -12,6 +12,13 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.username
+    
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return {
+            "refresh_token": str(refresh),
+            "access_token": str(refresh.access_token),
+        }
     
 
 class SavedFile(models.Model):

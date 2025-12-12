@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import CustomUser
 from rest_framework import status
 from rest_framework import generics 
-from .serializers import CustomUserSerializer 
+from .serializers import * 
 
 from django.http import HttpResponse
 from rest_framework.views import APIView
@@ -18,44 +18,47 @@ from rest_framework.permissions import IsAuthenticated
 def index(request):
     return HttpResponse("Hello, world. You're at the userfiles index.")
 
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+
+        # Generate JWT token
+        tokens = user.tokens()  # to create tokens method in model
+        
+        return Response({
+            "message": "Login successful",
+            "user": {
+                "email": user.email,
+            },
+            "tokens": tokens
+        }, status=status.HTTP_200_OK)
+
+class RegisterView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = RegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True) # this would always run all the methods in the serializer
+        user = serializer.save()
+
+        return Response({
+            #"id": user.id,
+            "message": "User registered successfully",
+            "user": {
+                "email": user.email,
+            }
+        }, status=status.HTTP_201_CREATED)
+
 class UserProfileView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
     permission_classes = [IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        """
-        GET user profile by Firebase UID passed in query params
-        Example: /sendinfo/?uid=abc123
-        """
-        uid = request.query_params.get('uid')
-        if not uid:
-            return Response({"error": "UID parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = CustomUser.objects.get(uid=uid)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = self.get_serializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request, *args, **kwargs):
-        """
-        POST user profile by Firebase UID in JSON body
-        """
-        uid = request.data.get('uid')
-        if not uid:
-            return Response({"error": "UID parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = CustomUser.objects.get(uid=uid)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = self.get_serializer(user)
-        return Response(serializer.data)
-
 
 class CreateFarmerView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
