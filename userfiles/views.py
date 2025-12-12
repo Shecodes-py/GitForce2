@@ -136,24 +136,30 @@ class WhatsAppBotView(APIView):
                     "3. Estimate a fair market price in Nigerian Naira (NGN) per kg. "
                     "4. Keep it very short and concise for a WhatsApp message."
                     "5. If it isn't a crop, ask for a crop photo."
+                    "CRITICAL: Keep the response UNDER 100 words. Be brief."
                 )
 
                 # 4. Generate Content
                 # We pass the prompt AND the image data
-                response = model.generate_content([
-                    prompt,
-                    {"mime_type": "image/jpeg", "data": img_data}
-                ])
+                response = model.generate_content([prompt, image])
 
                 ai_analysis = response.text
                 print(f"🧠 Gemini Says: {ai_analysis}")
+                
+                if len(ai_analysis) > 1000:
+                    ai_analysis = ai_analysis[:1000] + "...(more)"
 
-                # 5. Send the Analysis back to WhatsApp
-                msg.body(
-                    f"🤖 *Gemini Analysis:*\n{ai_analysis}\n\n"
-                    f"👇 *Sell this crop:* \n"
+                final_message = (
+                    f"*Gemini Analysis:*\n{ai_analysis}\n\n"
+                    f"*Sell this crop:* \n"
                     f"https://your-webapp.com/mint"
                 )
+
+                if len(final_message) > 1500:
+                    final_message = final_message[:1500]
+                    
+                # 5. Send the Analysis back to WhatsApp
+                msg.body(final_message)
 
             except Exception as e:
                 print(f"❌ Error: {e}")
