@@ -57,7 +57,7 @@ class RegisterView(generics.GenericAPIView):
 
 class SaveFileView(generics.CreateAPIView):
     serializer_class = SavedFileSerializer
-    permission_classes = [IsAuthenticated] # User must be logged in
+    permission_classes = [AllowAny] # User must be logged in
 
     def perform_create(self, serializer):
         # Automatically set the 'user' field to the currently logged-in user
@@ -66,7 +66,7 @@ class SaveFileView(generics.CreateAPIView):
 # Endpoint 2: Receive Data (GET)
 class UserFilesListView(generics.ListAPIView):
     serializer_class = SavedFileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         # Return only the files belonging to the requesting user
@@ -76,12 +76,12 @@ class UserFilesListView(generics.ListAPIView):
 class UserProfileView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
 class CreateFarmerView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
         # Save user normally; no .user foreign key needed
