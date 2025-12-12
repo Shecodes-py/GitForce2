@@ -157,7 +157,7 @@ class WhatsAppBotView(APIView):
 
             except Exception as e:
                 print(f"❌ Error: {e}")
-                msg.body("Sorry, I couldn't analyze that image. Please try again.")
+                msg.body(f"Sorry, I couldn't analyze that image. Please try again. {e}")
 
         else:
             msg.body("📸 Send me a photo of your harvest to analyze!")
