@@ -149,6 +149,8 @@ class WhatsAppBotView(APIView):
                     "3. Estimate a fair market price in Nigerian Naira (NGN) per kg. "
                     "4. Keep it very short and concise for a WhatsApp message."
                     "5. If it isn't a crop, ask for a crop photo."
+                    "6. If there's any defect with the plant, state it and mention it isn't suitable for sale."
+                    "7. For the '*', only use one, two makes it look weird."
                     "CRITICAL: Keep the response UNDER 100 words. Be brief."
                 )
 
@@ -165,9 +167,7 @@ class WhatsAppBotView(APIView):
                     ai_analysis = ai_analysis[:400] + "...(more)"
 
                 final_message = (
-                    f"*Gemini Analysis:*\n{ai_analysis}\n\n"
-                    f"*Sell this crop:* \n"
-                    f"https://your-webapp.com/mint"
+                    f"{ai_analysis}\n\n Courtesy the AgroVision AI Team"
                 )
 
                 if len(final_message) > 600:
