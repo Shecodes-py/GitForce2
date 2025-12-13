@@ -126,7 +126,7 @@ class WhatsAppBotView(APIView):
                 img_data = requests.get(image_url).content
 
                 # 2. Setup Gemini Model (Use Flash for speed!)
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                model = genai.GenerativeModel('gemini-2.5-flash')
 
                 # 3. The Prompt (Be specific!)
                 prompt = (
