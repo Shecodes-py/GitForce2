@@ -148,8 +148,8 @@ class WhatsAppBotView(APIView):
                 ai_analysis = response.text
                 print(f"🧠 Gemini Says: {ai_analysis}")
                 
-                if len(ai_analysis) > 1000:
-                    ai_analysis = ai_analysis[:1000] + "...(more)"
+                if len(ai_analysis) > 400:
+                    ai_analysis = ai_analysis[:400] + "...(more)"
 
                 final_message = (
                     f"*Gemini Analysis:*\n{ai_analysis}\n\n"
@@ -157,8 +157,8 @@ class WhatsAppBotView(APIView):
                     f"https://your-webapp.com/mint"
                 )
 
-                if len(final_message) > 1500:
-                    final_message = final_message[:1500]
+                if len(final_message) > 600:
+                    final_message = final_message[:600]
                     
                 # 5. Send the Analysis back to WhatsApp
                 msg.body(final_message)
